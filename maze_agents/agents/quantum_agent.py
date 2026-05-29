@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from time import perf_counter
 
-from maze_agents.maze import Maze, Position
 from maze_agents.metrics import SearchMetrics, SearchResult
+from maze_agents.search_types import SearchableMaze, SearchPosition
 
 
 class QuantumInspiredAgent:
@@ -19,18 +19,18 @@ class QuantumInspiredAgent:
 
     name = "Quantum-inspired parallel"
 
-    def solve(self, maze: Maze) -> SearchResult:
+    def solve(self, maze: SearchableMaze) -> SearchResult:
         """Find a shortest unweighted path using parallel path expansion."""
 
         started_at = perf_counter()
-        active_paths: list[list[Position]] = [[maze.start]]
-        visited_order: list[Position] = [maze.start]
-        explored_nodes: set[Position] = {maze.start}
+        active_paths: list[list[SearchPosition]] = [[maze.start]]
+        visited_order: list[SearchPosition] = [maze.start]
+        explored_nodes: set[SearchPosition] = {maze.start}
         max_active_paths = len(active_paths)
         total_parallel_iterations = 0
 
         while active_paths:
-            next_active_paths: list[list[Position]] = []
+            next_active_paths: list[list[SearchPosition]] = []
             total_parallel_iterations += 1
 
             for path in active_paths:
@@ -83,10 +83,10 @@ class QuantumInspiredAgent:
     def _build_result(
         self,
         *,
-        path: list[Position],
+        path: list[SearchPosition],
         found: bool,
-        visited_order: list[Position],
-        explored_nodes: set[Position],
+        visited_order: list[SearchPosition],
+        explored_nodes: set[SearchPosition],
         total_parallel_iterations: int,
         max_active_paths: int,
         started_at: float,

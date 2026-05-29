@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from time import perf_counter
 
-from maze_agents.maze import Maze, Position
 from maze_agents.metrics import SearchMetrics, SearchResult
+from maze_agents.search_types import SearchableMaze, SearchPosition
 
 
 class DFSAgent:
@@ -13,13 +13,13 @@ class DFSAgent:
 
     name = "Classical DFS"
 
-    def solve(self, maze: Maze) -> SearchResult:
+    def solve(self, maze: SearchableMaze) -> SearchResult:
         """Find a path from start to exit using stack-backed DFS."""
 
         started_at = perf_counter()
-        stack: list[tuple[Position, list[Position]]] = []
-        visited: set[Position] = set()
-        visited_order: list[Position] = []
+        stack: list[tuple[SearchPosition, list[SearchPosition]]] = []
+        visited: set[SearchPosition] = set()
+        visited_order: list[SearchPosition] = []
         dead_ends = 0
         max_stack_size = 0
         position = maze.start
@@ -88,9 +88,9 @@ class DFSAgent:
 
     @staticmethod
     def _pop_unvisited_state(
-        stack: list[tuple[Position, list[Position]]],
-        visited: set[Position],
-    ) -> tuple[Position, list[Position]] | None:
+        stack: list[tuple[SearchPosition, list[SearchPosition]]],
+        visited: set[SearchPosition],
+    ) -> tuple[SearchPosition, list[SearchPosition]] | None:
         """Return the next saved DFS state that has not already been explored."""
 
         while stack:
@@ -103,8 +103,8 @@ class DFSAgent:
     def _build_metrics(
         *,
         started_at: float,
-        path: list[Position],
-        visited_order: list[Position],
+        path: list[SearchPosition],
+        visited_order: list[SearchPosition],
         max_stack_size: int,
         dead_ends: int,
     ) -> SearchMetrics:

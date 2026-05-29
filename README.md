@@ -18,7 +18,15 @@ The maze is represented as a 2D grid:
 - `"S"`: start cell
 - `"E"`: exit cell
 
-By default, the project generates a new random maze on each run. The generated maze includes walls, crossroads, dead ends, and exactly one valid exit. A fixed sample maze is also available with `--sample`.
+By default, the project generates a new random 2D maze on each run. The generated maze includes walls, crossroads, dead ends, and exactly one valid exit. A fixed sample maze is also available with `--sample`.
+
+The project also supports 3D mazes. In 3D mode, positions are represented as:
+
+```text
+(level, row, col)
+```
+
+The agents can move in six directions: up, down, left, right, one level above, and one level below.
 
 ## Classical DFS Agent
 
@@ -68,7 +76,27 @@ From the project root, run:
 python main.py
 ```
 
-This generates a new random maze, prints both agents' final paths, their metrics, a comparison table, and then opens matplotlib visualizations.
+This generates a new random 2D maze, prints both agents' final paths, their metrics, a comparison table, and then opens matplotlib visualizations.
+
+Choose 2D explicitly:
+
+```bash
+python main.py --dimension 2d
+```
+
+Run a 3D maze:
+
+```bash
+python main.py --dimension 3d --width 9 --height 9 --depth 5
+```
+
+Open the 3D plot in a native interactive matplotlib window:
+
+```bash
+python main.py --dimension 3d --width 9 --height 9 --depth 5 --interactive-3d
+```
+
+In the interactive 3D window, use the mouse to rotate the plot and the matplotlib toolbar or mouse wheel for pan and zoom.
 
 Run without opening plots:
 
@@ -82,10 +110,22 @@ Use the fixed demo maze:
 python main.py --sample
 ```
 
+Use the fixed 3D demo maze:
+
+```bash
+python main.py --dimension 3d --sample
+```
+
 Control the random maze size and complexity:
 
 ```bash
 python main.py --width 21 --height 21 --complexity 0.9 --loop-factor 0.05
+```
+
+Control the 3D maze size:
+
+```bash
+python main.py --dimension 3d --width 11 --height 11 --depth 7 --complexity 0.85
 ```
 
 Use a seed when you want the same random maze again:
@@ -98,9 +138,25 @@ Random maze options:
 
 - `--width`: maze width, minimum `5`
 - `--height`: maze height, minimum `5`
+- `--depth`: number of 3D levels, minimum `3`; used only with `--dimension 3d`
 - `--complexity`: value from `0.0` to `1.0`; higher means more walls and dead ends
 - `--loop-factor`: value from `0.0` to `1.0`; higher opens more alternate routes
 - `--seed`: optional integer for reproducible maze generation
+
+For large 3D mazes, start with a low `--loop-factor`. The quantum-inspired agent keeps many active paths, so 3D mazes with many loops can become expensive quickly.
+
+3D visualization options:
+
+- `--interactive-3d`: tries to open a native matplotlib window for rotate, pan, and zoom
+- `--hide-3d-free-cells`: hides the translucent free-cell volume if the plot is too busy
+- `--hide-3d-free-cell-links`: hides the thin lines connecting neighboring free cells
+- `--show-3d-walls`: shows 3D wall markers; they are hidden by default so the walkable space and final paths stay clear
+
+If PyCharm still shows a static image instead of an interactive window, disable:
+
+```text
+Settings -> Tools -> Python Scientific -> Show plots in tool window
+```
 
 Also show visited-order visualizations:
 
@@ -113,6 +169,8 @@ Run with a custom text maze:
 ```bash
 python main.py --maze-file path/to/maze.txt
 ```
+
+Custom text maze files currently support 2D mazes only.
 
 Supported custom maze characters:
 
@@ -142,23 +200,51 @@ The quantum-inspired agent also tracks:
 
 - `total_parallel_iterations`
 
+The same metrics are used for both 2D and 3D runs.
+
+## Visualization
+
+The project uses matplotlib for both 2D and 3D plots.
+
+In 2D mode:
+
+- walls are black cells
+- free cells are white cells
+- start is green
+- exit is red
+- each final path is overlaid on the maze
+
+In 3D mode:
+
+- walkable/free cells are shown as translucent cyan circular 3D markers
+- neighboring walkable/free cells are connected with thin translucent blue lines
+- wall markers are hidden by default
+- start is green
+- exit is red
+- each final path is drawn as a 3D line
+- DFS and quantum-inspired paths can be compared side by side
+
+If you want to inspect the walls during debugging, show them explicitly:
+
+```bash
+python main.py --dimension 3d --interactive-3d --show-3d-walls
+```
+
 ## Visual Results and Benchmark Snapshots
 
 The following plots were generated from random mazes and saved in the `plots/` directory. They show the final DFS path on the left and the quantum-inspired path on the right.
 
-Because these runs used `seed=random`, the exact maze and timings will vary on future executions unless a fixed `--seed` value is provided.
+Because these runs used `seed=random`, the exact maze, paths, and timings will vary on future executions unless a fixed `--seed` value is provided. The numbers below are snapshots from completed local runs, not universal performance guarantees.
 
-### 20x20 Maze, Complexity 0.7
+### 2D Snapshots
+
+#### 20x20 Maze, Complexity 0.7
 
 ![20x20 DFS vs quantum-inspired path comparison](plots/maze_20x20_comparison.png)
-
-Command style:
 
 ```bash
 python main.py --width 20 --height 20 --complexity 0.7
 ```
-
-Summary:
 
 | Metric | DFS | Quantum-inspired |
 |---|---:|---:|
@@ -169,19 +255,13 @@ Summary:
 | Memory proxy | max_stack_size=14 | max_active_paths=274 |
 | Extra metric | dead_ends=1 | total_parallel_iterations=35 |
 
-In this medium-size maze, the quantum-inspired search found a shorter route, but it kept many more active paths in memory.
-
-### 30x30 Maze, Complexity 0.9
+#### 30x30 Maze, Complexity 0.9
 
 ![30x30 DFS vs quantum-inspired path comparison](plots/maze_30x30_comparison.png)
-
-Command style:
 
 ```bash
 python main.py --width 30 --height 30 --complexity 0.9
 ```
-
-Summary:
 
 | Metric | DFS | Quantum-inspired |
 |---|---:|---:|
@@ -192,19 +272,13 @@ Summary:
 | Memory proxy | max_stack_size=15 | max_active_paths=425 |
 | Extra metric | dead_ends=25 | total_parallel_iterations=120 |
 
-This run shows the core trade-off clearly: DFS is much faster and uses little stack memory, while the quantum-inspired method finds a shorter path by expanding many candidate paths in parallel.
-
-### 50x50 Maze, Complexity 0.7
+#### 50x50 Maze, Complexity 0.7
 
 ![50x50 DFS vs quantum-inspired path comparison](plots/maze_50x50_comparison.png)
-
-Command style:
 
 ```bash
 python main.py --width 50 --height 50 --complexity 0.7
 ```
-
-Summary:
 
 | Metric | DFS | Quantum-inspired |
 |---|---:|---:|
@@ -215,7 +289,85 @@ Summary:
 | Memory proxy | max_stack_size=48 | max_active_paths=813940 |
 | Extra metric | dead_ends=33 | total_parallel_iterations=132 |
 
-The 50x50 example demonstrates the memory explosion of the quantum-inspired simulation. It found a much shorter path, but the active path count grew to more than 800,000, making execution dramatically slower.
+The 2D runs show the main trade-off: DFS is usually faster and memory-light, while the quantum-inspired simulation often finds a shorter path by keeping many candidate paths active.
+
+### 3D Interactive Snapshots
+
+In 3D mode, the cyan points and thin blue links show the walkable search space. The orange and blue paths show the DFS and quantum-inspired solutions. Wall markers are hidden by default to keep the volume readable.
+
+#### 15x15x10 3D Maze
+
+![15x15x10 3D DFS vs quantum-inspired path comparison](plots/maze_3d_15x15x10_comparison.png)
+
+```bash
+python main.py --dimension 3d --width 15 --height 15 --depth 10 --interactive-3d
+```
+
+| Metric | DFS | Quantum-inspired |
+|---|---:|---:|
+| Found | yes | yes |
+| Path length | 273 | 59 |
+| Explored nodes | 333 | 408 |
+| Execution time | 2.495 ms | 69.144 ms |
+| Memory proxy | max_stack_size=28 | max_active_paths=905 |
+| Extra metric | dead_ends=17 | total_parallel_iterations=59 |
+
+This run shows the effect of adding vertical movement. DFS follows a long route through the 3D volume, while the quantum-inspired agent reaches the exit with a much shorter path.
+
+#### 20x20x10 3D Maze
+
+![20x20x10 3D DFS vs quantum-inspired path comparison](plots/maze_3d_20x20x10_comparison.png)
+
+```bash
+python main.py --dimension 3d --width 20 --height 20 --depth 10 --interactive-3d
+```
+
+| Metric | DFS | Quantum-inspired |
+|---|---:|---:|
+| Found | yes | yes |
+| Path length | 208 | 102 |
+| Explored nodes | 314 | 675 |
+| Execution time | 2.544 ms | 13551.992 ms |
+| Memory proxy | max_stack_size=35 | max_active_paths=90235 |
+| Extra metric | dead_ends=12 | total_parallel_iterations=102 |
+
+The quantum-inspired method still finds a shorter path, but the number of active paths grows sharply. This is the cost of simulating parallel exploration with ordinary Python data structures.
+
+#### 20x20x20 3D Maze
+
+![20x20x20 3D DFS vs quantum-inspired path comparison](plots/maze_3d_20x20x20_comparison.png)
+
+```bash
+python main.py --dimension 3d --width 20 --height 20 --depth 20 --interactive-3d
+```
+
+| Metric | DFS | Quantum-inspired |
+|---|---:|---:|
+| Found | yes | yes |
+| Path length | 372 | 86 |
+| Explored nodes | 435 | 1513 |
+| Execution time | 3.283 ms | 10367.299 ms |
+| Memory proxy | max_stack_size=46 | max_active_paths=89357 |
+| Extra metric | dead_ends=11 | total_parallel_iterations=86 |
+
+This deeper 3D maze makes the contrast especially visible: the shortest-style parallel expansion finds a compact route, but its memory proxy becomes much larger than the DFS stack.
+
+#### Large 50x50x4 3D Run
+
+```bash
+python main.py --dimension 3d --width 50 --height 50 --depth 4 --interactive-3d
+```
+
+| Metric | DFS | Quantum-inspired |
+|---|---:|---:|
+| Found | yes | yes |
+| Path length | 332 | 202 |
+| Explored nodes | 371 | 1171 |
+| Execution time | 5.960 ms | 2075.903 ms |
+| Memory proxy | max_stack_size=25 | max_active_paths=2995 |
+| Extra metric | dead_ends=10 | total_parallel_iterations=202 |
+
+For larger 3D mazes, the quantum-inspired simulation can become expensive very quickly. If a run becomes too heavy, reduce `--width`, `--height`, `--depth`, or `--loop-factor`, or use `--no-show` while collecting metrics.
 
 ## Example Terminal Output
 

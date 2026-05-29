@@ -6,11 +6,14 @@ from maze_agents.agents.quantum_agent import (
     QuantumInspiredParallelSearchAgent,
 )
 from maze_agents.maze import Maze, Position
+from maze_agents.maze3d import Maze3D, Position3D
 
 __all__ = [
     "DFSAgent",
     "Maze",
+    "Maze3D",
     "Position",
+    "Position3D",
     "QuantumInspiredAgent",
     "QuantumInspiredParallelSearchAgent",
 ]

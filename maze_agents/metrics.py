@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from maze_agents.maze import Position
+from maze_agents.search_types import SearchPosition
 
 
 @dataclass(frozen=True)
@@ -32,10 +32,10 @@ class SearchMetrics:
 class SearchResult:
     """Outcome returned by a maze-solving agent."""
 
-    path: list[Position]
+    path: list[SearchPosition]
     found: bool
     metrics: SearchMetrics
-    visited_order: list[Position]
+    visited_order: list[SearchPosition]
     agent_name: str = "Unknown agent"
     metadata: dict[str, Any] = field(default_factory=dict)
 
